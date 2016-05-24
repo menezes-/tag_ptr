@@ -2,8 +2,9 @@
   Copyright (c) 2016, Matteo Bertello
   All rights reserved.
 
-  Website: http://corralx.me
   Email:   bertello.matteo@gmail.com
+  GitHub:  http://github.com/Corralx/tag_ptr
+  Website: http://corralx.me
   Twitter: http://twitter.com/corralx
 
   Redistribution and use in source and binary forms, with or without
@@ -24,8 +25,7 @@
 #include <cstdint>
 #include <iostream>
 
-// NOTE(Corralx): This prevents the clash of name with log2 from the stl
-namespace impl
+namespace tag_impl
 {
 
 template<size_t V>
@@ -42,15 +42,15 @@ struct log2<1>
 
 }
 
-// NOTE(Corralx): No move constructor/move assignment operator, move semantic for primitive types is copy
-// NOTE(Corralx): No std::hash specialization because of the semantics of comparison operators
 template<typename T>
 class tag_ptr
 {
+	using pointer = T*;
+	using element_type = T;
+
 public:
 	tag_ptr() : _ptr(nullptr) {}
-	// NOTE(Corralx): This is marked explicit to prevent copy assignment from coercion
-	explicit tag_ptr(T* ptr, uint8_t value = 0) : _ptr(ptr) { data(value); }
+	explicit tag_ptr(pointer ptr, uint8_t value = 0) : _ptr(ptr) { tag(value); }
 	tag_ptr(const tag_ptr& o) : _ptr(o._ptr) {}
 	~tag_ptr() = default;
 
@@ -60,55 +60,51 @@ public:
 		return *this;
 	}
 
-// NOTE(Corralx): This prevents Visual Studio from complaining about the pointer to bool cast with /W3
 #pragma warning (disable: 4800)
 	operator bool() const
 	{
-		return static_cast<bool>(_ptr_bits & ~static_cast<uintptr_t>(data_mask));
+		return static_cast<bool>(_ptr_bits & ~static_cast<uintptr_t>(tag_mask));
 	}
 #pragma warning (default: 4800)
 
 	T* get() const
 	{
-		return reinterpret_cast<T*>(_ptr_bits & ~data_mask);
+		return reinterpret_cast<pointer>(_ptr_bits & ~tag_mask);
 	}
 
-	// NOTE(Corralx): This resets both the pointer and the data
-	void reset(T* p = nullptr)
+	void reset(pointer p = nullptr)
 	{
 		_ptr = p;
 	}
 
-	uint8_t data() const
+	uint8_t tag() const
 	{
-		return static_cast<uint8_t>(_ptr_bits & static_cast<uintptr_t>(data_mask));
+		return static_cast<uint8_t>(_ptr_bits & static_cast<uintptr_t>(tag_mask));
 	}
 
-	void data(uint8_t value)
+	void tag(uint8_t value)
 	{
-		// NOTE(Corralx): check that we have enough space to actually store the data
-		assert((value & data_mask) == value);
-		_ptr_bits = reinterpret_cast<uintptr_t>(get()) |
-			static_cast<uintptr_t>(value & data_mask);
-	};
+		assert((value & tag_mask) == value);
+		_ptr_bits = reinterpret_cast<uintptr_t>(get()) | static_cast<uintptr_t>(value & tag_mask);
+	}
 
 	void swap(tag_ptr& o)
 	{
-		T* tmp = _ptr;
+		pointer tmp = _ptr;
 		o._ptr = _ptr;
 		_ptr = tmp;
 	}
 
-	T& operator*() const { return *get(); }
-	T* operator->() const { return get(); }
+	element_type& operator*() const { return *get(); }
+	pointer operator->() const { return get(); }
 
-	static constexpr uint8_t data_bits = impl::log2<alignof(T)>::value;
-	static constexpr uint8_t data_mask = alignof(T) - (uint8_t)1;
+	static constexpr uint8_t tag_bits = tag_impl::log2<alignof(element_type)>::value;
+	static constexpr uint8_t tag_mask = alignof(element_type) - static_cast<uint8_t>(1);
 
 private:
 	union
 	{
-		T* _ptr;
+		pointer _ptr;
 		uintptr_t _ptr_bits;
 	};
 };
