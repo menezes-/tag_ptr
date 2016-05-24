@@ -9,12 +9,12 @@ In the x86 architecture the data is generally aligned to a multiple of its size,
 The rationale behind this implementation is to closely follow the normal pointer semantic, trying to behave as much as possible as a raw pointer. This thus follows the same ideas behind `unique_ptr` and `shared_ptr` provided by the `stl`.
 
 Because of this there are a few things to note about the design:
-* No move constructor or move assignment operator is explicitly provided (and should not be provided implicitly by the compiler either) since move operations on primitive types are simple copies
-* The single parameter constructor is marked `explicit` to prevent errors from coercions, following `unique_ptr` semantics as stated
+* No move constructor or move assignment operator are explicitly provided (and are not be provided implicitly by the compiler either) since move operations on primitive types are simple copies
+* The single parameter constructor is marked `explicit` to prevent errors from coercions, following `unique_ptr` behaviour
 * All the functions and operator overloads behave as on raw pointer ignoring the tag, including the comparison operators
-* An exception to this is the `reset` member which overwrites the value held by the `tag_ptr` with the provided one, thus losing the tag inside
+* An exception to this is the `reset` member which overwrites the underlying value held by the `tag_ptr` with the provided one, thus losing the tag inside
 * Because of the previous points, the `swap` and `operator<<` overloads are provided, but an `hash` overload is not since pointers with the same address but different tags would be treated as equal keys (this may or may not be the intended behaviour and an eventual implementation is left to the user)
-* A `make_tag` function is provided for no reason other than uniformity
+* A `make_tag` function is provided for no reason other than uniformity with the `stl`
 
 ## Requirements
 
