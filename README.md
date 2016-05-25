@@ -4,7 +4,7 @@
 
 This is a simple C++11 implementation of a [tagged pointer](https://en.wikipedia.org/wiki/Tagged_pointer), that allows to use the least significant bits in a pointer to save a payload, generally called `tag`. It does so by exploiting the alignment of types in memory.
 
-In the x86 architecture the data is generally aligned to a multiple of its size, if you do not request your compiler to do otherwise. This means that, for example, a 32 bit integer will have his memory address a multiple of four, thus leaving the two least significant bits to us as storage. Care must be obviously taken when pointer arithmetic or custom alignment is involved as things may break.
+In the x86 architecture the data is generally aligned to a multiple of its size by your compiler because addressing aligned memory is faster. This means that, for example, a 32 bit integer will have his memory address a multiple of four, thus leaving the two least significant bits to us as storage. Note that however this is not a requirements for the architecture and you can request your compiler to do otherwise and care must be obviously taken when pointer arithmetic or custom alignment is involved as things may break.
 
 The rationale behind this implementation is to closely follow the normal pointer semantic, trying to behave as much as possible as a raw pointer. This thus follows the same ideas behind `unique_ptr` and `shared_ptr` provided by the `stl`.
 
