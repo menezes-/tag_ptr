@@ -65,14 +65,14 @@ public:
     }
 
     std::uint8_t tag() const {
-        return static_cast<std::uint8_t>(_ptr_bits & static_cast<std::uintptr_t>(tag_mask));
+        return static_cast<std::uint8_t>(_ptr_bits & tag_mask);
     }
 
     void tag(std::uint8_t value) {
         if ((value & ptr_mask) != 0) {
             throw std::runtime_error("tag is too big");
         }
-        _ptr_bits = reinterpret_cast<std::uintptr_t>(get()) | static_cast<std::uintptr_t>(value & tag_mask);
+        _ptr_bits = reinterpret_cast<std::uintptr_t>(get()) | (value & tag_mask);
     }
 
     void swap(tag_ptr &o) {
@@ -89,10 +89,10 @@ public:
 
     // mask where the lowest `tag_bits` are set
     // example: for 8 byte alignment tagMask = alignedTo - 1 = 8 - 1 = 7 = 0b111
-    static constexpr std::uint8_t tag_mask = alignof(element_type) - static_cast<std::uint8_t>(1);
+    static constexpr std::uintptr_t tag_mask = alignof(element_type) - 1;
 
     // ptr_mask it the contraty: all bits apart from the lowest `tag_bits` are set
-    static constexpr std::uint8_t ptr_mask = ~tag_mask;
+    static constexpr std::uintptr_t ptr_mask = ~tag_mask;
 
 private:
     union {
